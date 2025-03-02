@@ -26,11 +26,9 @@ async def clanCreate(interaction: discord.Interaction, name: str):
     guild = client.get_guild(1340446614061322280)
     leader_role = guild.get_role(1345850845463449662)
     user = interaction.user
-    for role in user.roles:
-        if leader_role in user.roles:
-            await interaction.response.send_message("You cannot create a clan, you are already a leader!", ephemeral=True)
-        else:
-            break
-
+    if leader_role in user.roles:
+        await interaction.response.send_message("You cannot create a clan, you are already a leader!", ephemeral=True)
+    else:
+        
 
 client.run(config["token"])
