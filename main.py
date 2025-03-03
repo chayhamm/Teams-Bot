@@ -9,7 +9,6 @@ import json
 
 with open("config.json") as config:
     config = json.load(config)
-roles = open("clanRoles.txt", "a")
 
 intents = discord.Intents.default()
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
@@ -33,7 +32,7 @@ async def clanCreate(interaction: discord.Interaction, name: str):
     if leader_role in user.roles:
         await interaction.response.send_message("You cannot create a clan, you are already a leader!", ephemeral=True)
     else:
-        requestEmbed = discord.Embed(title = "New clan request", description = f'{user.mention} has requested to make: {name} clan.', color = 0xFFA500)
+        requestEmbed = discord.Embed(title = "New clan request", description = f'{user.mention} has requested to make: **{name}** clan.', color = 0xFFA500)
         requestChannel = guild.get_channel(1345852038336221254)
         class AcceptOrDeny(discord.ui.View):
             pass
@@ -43,24 +42,29 @@ async def clanCreate(interaction: discord.Interaction, name: str):
             @discord.ui.button(label = "Accept", style = discord.ButtonStyle.green)
             async def accept(self, interaction: discord.Interaction, button: discord.ui.button) -> None:
                 await interaction.response.send_message(f'You have accepted the {name} clan!', ephemeral=True)
-                clanRole = await guild.create_role(name=f'{name}', color =color)
+                clanRole = await guild.create_role(name=f'︲{name}', color =color)
                 category = discord.utils.get(guild.categories, id = 1340742859581554688)
-                databaseText = open("clans.txt", "a")
+                databaseText = open("clans.txt", "a+")
                 databaseText.write(f'{name}: {user.id}: {user.display_name}' + '\n')
-                roles.write(clanRole.name + "\n")
+                databaseText.close()
+                with open("clanRoles.txt", "a+", encoding="utf-8") as roles:
+                    roles.write(str(clanRole.name) + "\n")
+                roles.close()
                 overwrites = {
                     guild.default_role: discord.PermissionOverwrite(read_messages = True, send_messages = False),
                     clanRole: discord.PermissionOverwrite(read_messages = True, send_messages = True)
                 }
                 clanChannel = await interaction.guild.create_text_channel(name, category=category, overwrites=overwrites)
-                await interaction.response.send_message(f'You have accepted the: {name} clan!', ephemeral=True)
                 dmEmbed = discord.Embed(title = "[EU] Reboot Rust 5x", description = f'Your request for: {name} clan has been accepted!', color = 0xFFA500)
                 dmEmbed.add_field(name = "Channel:", value = clanChannel.mention, inline = True)
                 channelEmbed = discord.Embed(title = "[EU] Reboot Rust 5x", description=f"{clanRole.mention} Welcome to your clans' channel. \n Run /clan-invite to embark on your journey!", color= 0xFFA500)
                 await user.send(embed = dmEmbed)
+                await user.add_roles(clanRole)
+                await user.add_roles(leader_role)
                 await clanChannel.send(embed = channelEmbed)
                 self.value = True
                 self.stop()
-
+        await requestChannel.send(embed = requestEmbed, view = AcceptOrDeny())
+        await interaction.response.send_message(f'Your request for the: {name} clan has been sent!', ephemeral=True)
 
 client.run(config["token"])
