@@ -42,6 +42,8 @@ async def clanCreate(interaction: discord.Interaction, name: str):
             async def accept(self, interaction: discord.Interaction, button: discord.ui.button) -> None:
                 await interaction.response.send_message(f'You have accepted the {name} clan!', ephemeral=True)
                 clanRole = await guild.create_role(name=f'{name}', color =color)
+                databaseText = open("clans.txt", "a")
+                databaseText.write(f'{name}: {user.id}: {user.display_name}' + '\n')
                 # open clans database
 
 client.run(config["token"])
