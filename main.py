@@ -3,11 +3,13 @@ from discord import app_commands
 from discord.ext import commands 
 from discord.app_commands import Choice 
 from datetime import datetime
+from discord.utils import get
 import random
 import json
 
 with open("config.json") as config:
     config = json.load(config)
+roles = open("clanRoles.txt", "a")
 
 intents = discord.Intents.default()
 client = commands.Bot(command_prefix=config["prefix"], intents=intents)
@@ -42,8 +44,23 @@ async def clanCreate(interaction: discord.Interaction, name: str):
             async def accept(self, interaction: discord.Interaction, button: discord.ui.button) -> None:
                 await interaction.response.send_message(f'You have accepted the {name} clan!', ephemeral=True)
                 clanRole = await guild.create_role(name=f'{name}', color =color)
+                category = discord.utils.get(guild.categories, id = 1340742859581554688)
                 databaseText = open("clans.txt", "a")
                 databaseText.write(f'{name}: {user.id}: {user.display_name}' + '\n')
-                # open clans database
+                roles.write(clanRole.name + "\n")
+                overwrites = {
+                    guild.default_role: discord.PermissionOverwrite(read_messages = True, send_messages = False),
+                    clanRole: discord.PermissionOverwrite(read_messages = True, send_messages = True)
+                }
+                clanChannel = await interaction.guild.create_text_channel(name, category=category, overwrites=overwrites)
+                await interaction.response.send_message(f'You have accepted the: {name} clan!', ephemeral=True)
+                dmEmbed = discord.Embed(title = "[EU] Reboot Rust 5x", description = f'Your request for: {name} clan has been accepted!', color = 0xFFA500)
+                dmEmbed.add_field(name = "Channel:", value = clanChannel.mention, inline = True)
+                channelEmbed = discord.Embed(title = "[EU] Reboot Rust 5x", description=f"{clanRole.mention} Welcome to your clans' channel. \n Run /clan-invite to embark on your journey!", color= 0xFFA500)
+                await user.send(embed = dmEmbed)
+                await clanChannel.send(embed = channelEmbed)
+                self.value = True
+                self.stop()
+
 
 client.run(config["token"])
